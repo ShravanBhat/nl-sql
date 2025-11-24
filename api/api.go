@@ -108,6 +108,7 @@ func HandleGenerateQuery(w http.ResponseWriter, r *http.Request) {
 
 	// 2. Call LLM to generate query
 	sqlQuery, err := ai.GenerateSQLQuery(req.Question, schema, dbType)
+	fmt.Println(req.Question,sqlQuery)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, models.APIResponse{Success: false, Message: "Failed to generate SQL query: " + err.Error()})
 		return

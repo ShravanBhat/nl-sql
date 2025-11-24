@@ -7,12 +7,13 @@ import (
 	"log"
 	"net/http"
 	"nlsql/models"
+	"os"
 	"strings"
 	"time"
 )
 
 func GenerateSQLQuery(question string, schema string, dbType string) (string, error) {
-	apiKey := "" 
+	apiKey := os.Getenv("GEMINI_API_KEY")
 	if apiKey == "" {
 		log.Println("WARNING: GEMINI_API_KEY is not set. Using dummy query.")
 		return "SELECT 'Error: API Key not set', 'Please add your Gemini API key in main.go' AS 'Status'", nil

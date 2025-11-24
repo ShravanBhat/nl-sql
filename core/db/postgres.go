@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"nlsql/models"
 	"strings"
+
+	_ "github.com/lib/pq"
 )
 
 type PostgresAdapter struct{}
@@ -35,7 +37,9 @@ func (p *PostgresAdapter) GetSchema(db *sql.DB) (string, error) {
 	defer rows.Close()
 
 	var schemaBuilder strings.Builder
-	currentTable := ""
+	var currentTable string
+	var currentColumns []string
+
 	for rows.Next() {
 		var tableName, columnName, dataType string
 		if err := rows.Scan(&tableName, &columnName, &dataType); err != nil {
@@ -44,17 +48,23 @@ func (p *PostgresAdapter) GetSchema(db *sql.DB) (string, error) {
 
 		if tableName != currentTable {
 			if currentTable != "" {
-				schemaBuilder.WriteString(");\n")
+				schemaBuilder.WriteString(fmt.Sprintf("CREATE TABLE %s (\n", currentTable))
+				schemaBuilder.WriteString(strings.Join(currentColumns, ",\n"))
+				schemaBuilder.WriteString("\n);\n\n")
 			}
-			schemaBuilder.WriteString(fmt.Sprintf("\nCREATE TABLE %s (\n", tableName))
 			currentTable = tableName
+			currentColumns = []string{}
 		}
-		schemaBuilder.WriteString(fmt.Sprintf("  %s %s,\n", columnName, dataType))
+		currentColumns = append(currentColumns, fmt.Sprintf("  %s %s", columnName, dataType))
 	}
+
 	if currentTable != "" {
-		// Remove trailing comma and add closing parenthesis
-		schema := strings.TrimRight(schemaBuilder.String(), ",\n") + "\n);\n"
-		return schema, nil
+		schemaBuilder.WriteString(fmt.Sprintf("CREATE TABLE %s (\n", currentTable))
+		schemaBuilder.WriteString(strings.Join(currentColumns, ",\n"))
+		schemaBuilder.WriteString("\n);\n")
+	} else {
+		return "", fmt.Errorf("no tables found in public schema")
 	}
-	return "", fmt.Errorf("no tables found in public schema")
+
+	return schemaBuilder.String(), nil
 }

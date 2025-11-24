@@ -36,7 +36,7 @@ func (m *MySQLAdapter) GetSchema(db *sql.DB) (string, error) {
 	var schemaBuilder strings.Builder
 	// 2. For each table, get its structure
 	for _, tableName := range tableNames {
-		schemaBuilder.WriteString(fmt.Sprintf("\nCREATE TABLE %s (\n", tableName))
+		schemaBuilder.WriteString(fmt.Sprintf("CREATE TABLE %s (\n", tableName))
 
 		descRows, err := db.Query(fmt.Sprintf("DESCRIBE %s", tableName))
 		if err != nil {
@@ -44,20 +44,20 @@ func (m *MySQLAdapter) GetSchema(db *sql.DB) (string, error) {
 			continue
 		}
 
+		var columns []string
 		for descRows.Next() {
 			var field, typeCol, null, key, defaultCol, extra interface{}
 			if err := descRows.Scan(&field, &typeCol, &null, &key, &defaultCol, &extra); err != nil {
 				descRows.Close()
 				return "", err
 			}
-			// Format as "column_name type,"
-			schemaBuilder.WriteString(fmt.Sprintf("  %s %s,\n", field, typeCol))
+			// Format as "column_name type"
+			columns = append(columns, fmt.Sprintf("  %s %s", field, typeCol))
 		}
 		descRows.Close()
 
-		schema := strings.TrimRight(schemaBuilder.String(), ",\n") + "\n);\n"
-		schemaBuilder.Reset() // Clear for next loop
-		schemaBuilder.WriteString(schema)
+		schemaBuilder.WriteString(strings.Join(columns, ",\n"))
+		schemaBuilder.WriteString("\n);\n\n")
 	}
 
 	return schemaBuilder.String(), nil
