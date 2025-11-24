@@ -33,3 +33,39 @@ You need to have Go installed on your computer to run this program. You also nee
 ## Technologies used
 
 This project is built with Go for the backend server. The frontend uses HTML and Tailwind CSS for styling. It uses the Gemini API for the intelligence part.
+
+## High Level Design
+
+The system is built with three main parts that work together.
+
+1.  **The User Interface**
+    This is the website you see in your browser. It takes your input and shows you the results. It talks to the backend server.
+
+2.  **The Backend Server**
+    This is the main program running on your computer. It acts as the middleman. It receives your questions, talks to the AI, and runs commands on your database.
+
+3.  **External Services**
+    We connect to two outside things. First is your database (like PostgreSQL or MySQL) where your data lives. Second is Google Gemini, which acts as the brain to translate English into SQL.
+
+## Low Level Design
+
+Organized the code into specific folders to keep it clean and easy to understand.
+
+*   **main.go**: This is the starting point. It turns on the server and loads your settings.
+*   **api folder**: This contains the code that handles requests from the website. For example, when you click "Connect", a specific function in this folder does the work.
+*   **core/db folder**: This handles all the messy details of talking to different databases. It makes sure that asking for data looks the same to the rest of the app, whether you use Postgres or MySQL.
+*   **core/ai folder**: This manages the conversation with Google Gemini. It prepares your question and the database structure so the AI can understand it.
+
+## Design Patterns Used
+
+We used standard coding patterns to solve common problems. Here is what we used and why.
+
+### Factory Pattern
+We use a "Factory" to create the database connections. When you choose a database type in the dropdown, the Factory picks the correct code to run.
+
+**Why we used it:** This makes it very easy to add new databases in the future. If we want to add SQLite support later, we just add a new piece to the Factory without breaking the existing code.
+
+### Adapter Pattern
+We created a standard interface (a set of rules) for how to talk to a database. Then we wrote specific "Adapters" for Postgres and MySQL that follow these rules.
+
+**Why we used it:** Different databases speak slightly different languages. The Adapter makes them all look the same to our application. This means the main application logic does not need to worry about which specific database you are using.
