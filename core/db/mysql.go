@@ -6,6 +6,7 @@ import (
 	"log"
 	"nlsql/models"
 	"strings"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type MySQLAdapter struct{}
